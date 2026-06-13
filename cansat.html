@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CanSat GCS — Tejaswini</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="mission-info">
+    <span>🛰️ CANSAT GCS</span>
+    <span id="mission-time">T+ 00:00:00</span>
+    <span id="packet-count">Packets: 0</span>
+  </div>
+  <div id="controls">
+    <button id="startBtn" onclick="startTelemetry()">▶ START</button>
+    <button id="stopBtn" onclick="stopTelemetry()">■ STOP</button>
+    <button onclick="exportCSV()">⬇ CSV</button>
+    <button onclick="resetPackets()">↺ RESET</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD GRID -->
+<div id="dashboard">
+
+  <!-- LEFT COLUMN -->
+  <div id="left-col">
+
+    <!-- TELEMETRY PANEL -->
+    <div class="panel" id="telemetry-panel">
+      <div class="panel-title">📡 CONTAINER TELEMETRY</div>
+      <div class="tele-grid">
+        <div class="tele-item">
+          <span class="tele-label">ALTITUDE</span>
+          <span class="tele-value" id="alt">---</span>
+          <span class="tele-unit">m</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">PRESSURE</span>
+          <span class="tele-value" id="pres">---</span>
+          <span class="tele-unit">hPa</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">TEMPERATURE</span>
+          <span class="tele-value" id="temp">---</span>
+          <span class="tele-unit">°C</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">DESCENT RATE</span>
+          <span class="tele-value" id="desc">---</span>
+          <span class="tele-unit">m/s</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">BATTERY</span>
+          <span class="tele-value" id="batt">---</span>
+          <span class="tele-unit">V</span>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top:10px">
+        📦 PAYLOAD TELEMETRY
+      </div>
+      <div class="tele-grid">
+        <div class="tele-item">
+          <span class="tele-label">ROLL</span>
+          <span class="tele-value" id="roll">---</span>
+          <span class="tele-unit">°</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">PITCH</span>
+          <span class="tele-value" id="pitch">---</span>
+          <span class="tele-unit">°</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">YAW</span>
+          <span class="tele-value" id="yaw">---</span>
+          <span class="tele-unit">°</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">GPS LAT</span>
+          <span class="tele-value" id="lat">---</span>
+        </div>
+        <div class="tele-item">
+          <span class="tele-label">GPS LON</span>
+          <span class="tele-value" id="lon">---</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR CODE PANEL -->
+    <div class="panel" id="error-panel">
+      <div class="panel-title">⚠️ ERROR CODE SYSTEM</div>
+      <div id="error-digits">
+        <div class="error-digit-box">
+          <span class="digit-label">DESCENT</span>
+          <span class="digit" id="e1">0</span>
+        </div>
+        <div class="error-digit-box">
+          <span class="digit-label">GPS</span>
+          <span class="digit" id="e2">0</span>
+        </div>
+        <div class="error-digit-box">
+          <span class="digit-label">PAYLOAD</span>
+          <span class="digit" id="e3">0</span>
+        </div>
+        <div class="error-digit-box">
+          <span class="digit-label">CHUTE</span>
+          <span class="digit" id="e4">0</span>
+        </div>
+      </div>
+      <div id="error-status">
+        <p id="e1-msg">✅ Descent Rate: Normal</p>
+        <p id="e2-msg">✅ GPS: Available</p>
+        <p id="e3-msg">✅ Payload: Separated</p>
+        <p id="e4-msg">✅ Parachute: Inactive</p>
+      </div>
+    </div>
+
+    <!-- MISSION CONTROL -->
+    <div class="panel" id="mission-panel">
+      <div class="panel-title">🎮 MISSION CONTROL</div>
+      <button class="cmd-btn" onclick="manualSep()">
+        🔓 Manual Separation
+      </button>
+      <button class="cmd-btn danger" onclick="emergencyChute()">
+        🪂 Emergency Parachute
+      </button>
+      <button class="cmd-btn" onclick="redundantActivation()">
+        🔄 Redundant Activation
+      </button>
+      <div id="cmd-status">Awaiting command...</div>
+    </div>
+
+  </div>
+
+  <!-- MIDDLE COLUMN -->
+  <div id="mid-col">
+    <div class="panel">
+      <div class="panel-title">📈 ALTITUDE</div>
+      <canvas id="altChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🌡️ TEMPERATURE</div>
+      <canvas id="tempChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🔋 BATTERY VOLTAGE</div>
+      <canvas id="battChart"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div id="right-col">
+    <div class="panel">
+      <div class="panel-title">🗺️ GPS TRACKING MAP</div>
+      <div id="map"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🧭 ORIENTATION</div>
+      <canvas id="orientCanvas"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ALL LIBRARIES -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+<!-- YOUR SCRIPT -->
+<script src="script.js"></script>
+
+</body>
+</html>
