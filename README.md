@@ -1,0 +1,1 @@
+A web-based Ground Control Station (GCS) designed for monitoring and controlling a CanSat mission in real time. The dashboard provides live telemetry visualization, GPS tracking, mission control commands, error monitoring, and data logging through an intuitive and responsive user interface.
